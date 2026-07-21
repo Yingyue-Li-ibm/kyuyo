@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>給与計算ツール</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  background: #f7f8fa;
+  color: #1f2328;
+  padding: 24px 16px;
+}
+.container { max-width: 680px; margin: 0 auto; }
+h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.subtitle { color: #57606a; font-size: 13px; margin-bottom: 20px; }
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.card h2 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+input[type="number"] {
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 150px;
+}
+.btn {
+  padding: 8px 20px;
+  background: #3b82d4;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-gray {
+  background: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+}
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media(max-width:500px){ .grid { grid-template-columns: 1fr; } }
+.field label { display: block; font-size: 12px; color: #57606a; margin-bottom: 3px; }
+.field input { width: 100%; padding: 7px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; }
+.actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; align-items: center; }
+#savedMsg { color: #2d9a5f; font-size: 13px; display: none; }
+#result { display: none; }
+table { width: 100%; border-collapse: collapse; }
+td { padding: 7px 4px; border-bottom: 1px solid #f0f0f0; }
+td:last-child { text-align: right; }
+.sec { background: #f7f8fa; }
+.sec td { font-size: 12px; color: #57606a; font-weight: 600; padding: 6px 4px; border-bottom: none; }
+.ind td:first-child { padding-left: 14px; }
+.sub td { font-weight: 700; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; }
+.tot td { font-weight: 700; font-size: 18px; color: #3b82d4; border-top: 2px solid #333; border-bottom: none; padding-top: 10px; }
+.notice { font-size: 12px; color: #57606a; margin-top: 10px; }
+footer { text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #e5e7eb; padding-top: 14px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>給与計算ツール</h1>
+  <p class="subtitle">残業時間を入力するだけで手取り予測が確認できます。設定は各自のブラウザに保存されます。</p>
+
+  <!-- 計算 -->
+  <div class="card">
+    <h2>今月の残業時間</h2>
+    <div class="row">
+      <input type="number" id="overtime" placeholder="例: 28.30" min="0" step="0.01">
+      <span style="color:#57606a">時間</span>
+      <button class="btn" onclick="doCalc()">計算する</button>
+    </div>
+  </div>
+
+  <!-- 結果 -->
+  <div class="card" id="result">
+    <h2>給与明細（予測）</h2>
+    <table id="tbl"></table>
+    <p class="notice">※ 所得税は源泉徴収税額表（甲欄・扶養0人）をもとに計算しています。実際の金額と多少異なる場合があります。</p>
+  </div>
+
+  <!-- 設定 -->
+  <div class="card">
+    <h2>設定（初回のみ入力してください）</h2>
+    <div class="grid">
+      <div class="field"><label>基本給（円）</label><input type="number" id="c_base"></div>
+      <div class="field"><label>時間外時給（円）</label><input type="number" id="c_hourly"></div>
+      <div class="field"><label>健康保険料（円）</label><input type="number" id="c_kenko"></div>
+      <div class="field"><label>厚生年金保険料（円）</label><input type="number" id="c_nenkin"></div>
+      <div class="field"><label>子ども・子育て支援金（円）</label><input type="number" id="c_kodomo"></div>
+      <div class="field"><label>住民税（円）</label><input type="number" id="c_jumin"></div>
+      <div class="field"><label>DCマッチング拠出（円）</label><input type="number" id="c_dc"></div>
+      <div class="field"><label>雇用保険料率（%）</label><input type="number" id="c_koyo" step="0.01"></div>
+    </div>
+    <div class="actions">
+      <span id="savedMsg">✅ 保存しました</span>
+      <button class="btn btn-gray" onclick="resetCfg()">リセット</button>
+      <button class="btn" onclick="saveCfg()">保存する</button>
+    </div>
+  </div>
+
+  <footer>Made with IBM Bob</footer>
+</div>
+
+<script>
+var KEY = "kyuyo_cfg_v1";
+
+var DEFAULTS = {
+  base:456626, hourly:3740, kenko:21200, nenkin:48495,
+  kodomo:609, jumin:31400, dc:32000, koyo:0.5
+};
+
+var TAX = [
+  [0,88000,0],[88000,89000,130],[89000,90000,180],[90000,91000,230],[91000,92000,290],
+  [92000,93000,340],[93000,94000,390],[94000,95000,440],[95000,96000,490],[96000,97000,540],
+  [97000,98000,590],[98000,99000,640],[99000,101000,720],[101000,103000,830],[103000,105000,930],
+  [105000,107000,1030],[107000,109000,1130],[109000,111000,1240],[111000,113000,1340],[113000,115000,1440],
+  [115000,117000,1540],[117000,119000,1640],[119000,121000,1750],[121000,123000,1850],[123000,125000,1950],
+  [125000,127000,2050],[127000,129000,2150],[129000,131000,2260],[131000,133000,2360],[133000,135000,2460],
+  [135000,137000,2560],[137000,139000,2660],[139000,141000,2770],[141000,143000,2870],[143000,145000,2970],
+  [145000,147000,3070],[147000,149000,3170],[149000,151000,3280],[151000,153000,3380],[153000,155000,3480],
+  [155000,157000,3580],[157000,159000,3680],[159000,161000,3790],[161000,163000,3890],[163000,165000,3990],
+  [165000,167000,4090],[167000,169000,4190],[169000,171000,4300],[171000,173000,4400],[173000,175000,4500],
+  [175000,177000,4600],[177000,179000,4700],[179000,181000,4810],[181000,183000,4910],[183000,185000,5010],
+  [185000,187000,5110],[187000,189000,5210],[189000,191000,5320],[191000,193000,5420],[193000,195000,5520],
+  [195000,197000,5620],[197000,199000,5720],[199000,201000,5830],[201000,203000,5930],[203000,205000,6030],
+  [205000,207000,6130],[207000,209000,6230],[209000,211000,6340],[211000,213000,6440],[213000,215000,6540],
+  [215000,217000,6640],[217000,219000,6740],[219000,221000,6850],[221000,224000,7010],[224000,227000,7210],
+  [227000,230000,7420],[230000,233000,7630],[233000,236000,7830],[236000,239000,8040],[239000,242000,8240],
+  [242000,245000,8450],[245000,248000,8650],[248000,251000,8860],[251000,254000,9060],[254000,257000,9270],
+  [257000,260000,9470],[260000,263000,9680],[263000,266000,9880],[266000,269000,10090],[269000,272000,10290],
+  [272000,275000,10500],[275000,278000,10700],[278000,281000,10910],[281000,284000,11110],[284000,287000,11320],
+  [287000,290000,11520],[290000,293000,11730],[293000,296000,11930],[296000,299000,12140],[299000,302000,12340],
+  [302000,305000,12550],[305000,308000,12750],[308000,311000,12960],[311000,314000,13160],[314000,317000,13370],
+  [317000,320000,13570],[320000,323000,13780],[323000,326000,13980],[326000,329000,14190],[329000,332000,14390],
+  [332000,335000,14600],[335000,338000,14800],[338000,341000,15010],[341000,344000,15210],[344000,347000,15420],
+  [347000,350000,15620],[350000,353000,15830],[353000,356000,16030],[356000,359000,16240],[359000,362000,16440],
+  [362000,365000,16650],[365000,368000,16850],[368000,371000,17060],[371000,374000,17260],[374000,377000,17470],
+  [377000,380000,17670],[380000,383000,17880],[383000,386000,18080],[386000,389000,18290],[389000,392000,18490],
+  [392000,395000,18700],[395000,398000,18900],[398000,401000,19110],[401000,404000,19310],[404000,407000,19520],
+  [407000,410000,19720],[410000,413000,19930],[413000,416000,20130],[416000,419000,20340],[419000,422000,20540],
+  [422000,425000,20750],[425000,428000,20950],[428000,431000,21160],[431000,434000,21360],[434000,437000,21570],
+  [437000,440000,21770],[440000,443000,21980],[443000,446000,22180],[446000,449000,22390],[449000,452000,22590],
+  [452000,455000,22800],[455000,458000,23000],[458000,461000,23210],[461000,464000,23410],[464000,467000,23620],
+  [467000,470000,23820],[470000,473000,24030],[473000,476000,24230],[476000,479000,24440],[479000,482000,24640],
+  [482000,485000,24850],[485000,488000,25050],[488000,491000,25260],[491000,494000,25460],[494000,497000,25670],
+  [497000,500000,25870],[500000,503000,26080],[503000,506000,26280],[506000,509000,26490],[509000,512000,26690],
+  [512000,515000,26900],[515000,518000,27100],[518000,521000,27310],[521000,524000,27510],[524000,527000,27720],
+  [527000,530000,27920],[530000,533000,28130],[533000,536000,28330],[536000,539000,28540],[539000,542000,28740],
+  [542000,545000,28950],[545000,548000,29150],[548000,551000,29360],[551000,554000,29560],[554000,557000,29770],
+  [557000,560000,29970],[560000,563000,30180],[563000,566000,30380],[566000,569000,30590],[569000,572000,30790],
+  [572000,575000,31000],[575000,578000,31200],[578000,581000,31410],[581000,584000,31610],[584000,587000,31820],
+  [587000,590000,32020],[590000,593000,32230],[593000,596000,32430],[596000,599000,32640],[599000,602000,32840]
+];
+
+function calcTax(t) {
+  for (var i = 0; i < TAX.length; i++) {
+    if (t >= TAX[i][0] && t < TAX[i][1]) return TAX[i][2];
+  }
+  if (t < 1000000) return Math.round(t * 0.0533 + 249);
+  return Math.round(t * 0.1021 - 39500);
+}
+
+function yen(n) { return n.toLocaleString() + " 円"; }
+
+function loadCfg() {
+  try {
+    var s = localStorage.getItem(KEY);
+    if (s) {
+      var o = JSON.parse(s);
+      var c = {};
+      for (var k in DEFAULTS) c[k] = (o[k] !== undefined) ? o[k] : DEFAULTS[k];
+      return c;
+    }
+  } catch(e) {}
+  var c = {};
+  for (var k in DEFAULTS) c[k] = DEFAULTS[k];
+  return c;
+}
+
+function fillForm(c) {
+  document.getElementById("c_base").value   = c.base;
+  document.getElementById("c_hourly").value = c.hourly;
+  document.getElementById("c_kenko").value  = c.kenko;
+  document.getElementById("c_nenkin").value = c.nenkin;
+  document.getElementById("c_kodomo").value = c.kodomo;
+  document.getElementById("c_jumin").value  = c.jumin;
+  document.getElementById("c_dc").value     = c.dc;
+  document.getElementById("c_koyo").value   = c.koyo;
+}
+
+function readForm() {
+  return {
+    base:   parseFloat(document.getElementById("c_base").value)   || DEFAULTS.base,
+    hourly: parseFloat(document.getElementById("c_hourly").value) || DEFAULTS.hourly,
+    kenko:  parseFloat(document.getElementById("c_kenko").value)  || DEFAULTS.kenko,
+    nenkin: parseFloat(document.getElementById("c_nenkin").value) || DEFAULTS.nenkin,
+    kodomo: parseFloat(document.getElementById("c_kodomo").value) || DEFAULTS.kodomo,
+    jumin:  parseFloat(document.getElementById("c_jumin").value)  || DEFAULTS.jumin,
+    dc:     parseFloat(document.getElementById("c_dc").value)     || DEFAULTS.dc,
+    koyo:   parseFloat(document.getElementById("c_koyo").value)   || DEFAULTS.koyo
+  };
+}
+
+function saveCfg() {
+  var c = readForm();
+  localStorage.setItem(KEY, JSON.stringify(c));
+  var m = document.getElementById("savedMsg");
+  m.style.display = "inline";
+  setTimeout(function(){ m.style.display = "none"; }, 2500);
+}
+
+function resetCfg() {
+  if (confirm("設定をリセットしますか？")) fillForm(DEFAULTS);
+}
+
+function doCalc() {
+  var h = parseFloat(document.getElementById("overtime").value);
+  if (isNaN(h) || h < 0) { alert("残業時間を入力してください"); return; }
+  var c = readForm();
+
+  var ot    = Math.floor(h * c.hourly);
+  var gross = c.base + ot;
+  var koyo  = Math.floor(gross * c.koyo / 100);
+  var shakai = c.kenko + c.nenkin + koyo + c.kodomo;
+  var taxable = gross - shakai;
+  var tax = calcTax(taxable);
+  var deduct = shakai + tax + c.jumin + c.dc;
+  var net = gross - deduct;
+
+  var r = "";
+  r += "<tr class='sec'><td colspan='2'>支給</td></tr>";
+  r += "<tr class='ind'><td>基本給</td><td>" + yen(c.base) + "</td></tr>";
+  r += "<tr class='ind'><td>時間外手当（" + h.toFixed(2) + "h）</td><td>" + yen(ot) + "</td></tr>";
+  r += "<tr class='sub'><td>総支給額</td><td>" + yen(gross) + "</td></tr>";
+  r += "<tr class='sec'><td colspan='2'>控除</td></tr>";
+  r += "<tr class='ind'><td>健康保険料</td><td>" + yen(c.kenko) + "</td></tr>";
+  r += "<tr class='ind'><td>厚生年金保険料</td><td>" + yen(c.nenkin) + "</td></tr>";
+  r += "<tr class='ind'><td>雇用保険料</td><td>" + yen(koyo) + "</td></tr>";
+  r += "<tr class='ind'><td>子ども・子育て支援金</td><td>" + yen(c.kodomo) + "</td></tr>";
+  r += "<tr class='ind'><td>所得税（課税額 " + taxable.toLocaleString() + "円）</td><td>" + yen(tax) + "</td></tr>";
+  r += "<tr class='ind'><td>住民税</td><td>" + yen(c.jumin) + "</td></tr>";
+  r += "<tr class='ind'><td>DCマッチング拠出</td><td>" + yen(c.dc) + "</td></tr>";
+  r += "<tr class='sub'><td>控除合計</td><td>" + yen(deduct) + "</td></tr>";
+  r += "<tr class='tot'><td>★ 差引支給額（手取り）</td><td>" + yen(net) + "</td></tr>";
+
+  document.getElementById("tbl").innerHTML = r;
+  document.getElementById("result").style.display = "block";
+  document.getElementById("result").scrollIntoView({behavior:"smooth"});
+}
+
+fillForm(loadCfg());
+</script>
+</body>
+</html>
