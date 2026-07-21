@@ -14,33 +14,68 @@ body {
   color: #1f2328;
   padding: 24px 16px;
 }
-.container { max-width: 680px; margin: 0 auto; }
+.container { max-width: 600px; margin: 0 auto; }
 h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
 .subtitle { color: #57606a; font-size: 13px; margin-bottom: 20px; }
+
 .card {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  padding: 20px;
+  padding: 24px;
   margin-bottom: 16px;
 }
-.card h2 {
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 14px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #e5e7eb;
+.card h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.card .desc { color: #57606a; font-size: 13px; margin-bottom: 18px; }
+
+/* ウィザード */
+.step { display: none; }
+.step.active { display: block; }
+
+.step-indicator {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  align-items: center;
 }
-.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-input[type="number"] {
-  padding: 8px 10px;
+.dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  transition: background 0.2s;
+}
+.dot.done { background: #3b82d4; }
+.dot.current { background: #3b82d4; outline: 3px solid #bfdbfe; }
+.step-label { font-size: 12px; color: #57606a; margin-left: 4px; }
+
+.hint {
+  background: #f0f6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #1e40af;
+  margin-bottom: 16px;
+}
+.hint strong { display: block; margin-bottom: 2px; }
+
+.field { margin-bottom: 4px; }
+.field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 5px; }
+.field input {
+  width: 100%;
+  padding: 10px 12px;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
-  font-size: 14px;
-  width: 150px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s;
 }
+.field input:focus { border-color: #3b82d4; }
+.unit { font-size: 13px; color: #57606a; margin-top: 4px; }
+
+.btn-row { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
 .btn {
-  padding: 8px 20px;
+  padding: 9px 22px;
   background: #3b82d4;
   color: #fff;
   border: none;
@@ -51,67 +86,228 @@ input[type="number"] {
 }
 .btn-gray {
   background: #f0f0f0;
-  color: #333;
+  color: #444;
   border: 1px solid #ddd;
 }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media(max-width:500px){ .grid { grid-template-columns: 1fr; } }
-.field label { display: block; font-size: 12px; color: #57606a; margin-bottom: 3px; }
-.field input { width: 100%; padding: 7px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; }
-.actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; align-items: center; }
-#savedMsg { color: #2d9a5f; font-size: 13px; display: none; }
-#result { display: none; }
+
+/* 計算画面 */
+#calcScreen { display: none; }
+.calc-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.calc-input input {
+  width: 160px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 16px;
+  outline: none;
+}
+.calc-input input:focus { border-color: #3b82d4; }
+
+#result { display: none; margin-top: 16px; }
 table { width: 100%; border-collapse: collapse; }
 td { padding: 7px 4px; border-bottom: 1px solid #f0f0f0; }
 td:last-child { text-align: right; }
-.sec { background: #f7f8fa; }
-.sec td { font-size: 12px; color: #57606a; font-weight: 600; padding: 6px 4px; border-bottom: none; }
+.sec td { font-size: 12px; color: #57606a; font-weight: 600; padding: 8px 4px 4px; border-bottom: none; background: #f7f8fa; }
 .ind td:first-child { padding-left: 14px; }
-.sub td { font-weight: 700; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; }
-.tot td { font-weight: 700; font-size: 18px; color: #3b82d4; border-top: 2px solid #333; border-bottom: none; padding-top: 10px; }
+.sub td { font-weight: 700; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 8px 4px; }
+.tot td { font-weight: 700; font-size: 18px; color: #3b82d4; border-top: 2px solid #333; border-bottom: none; padding-top: 12px; }
 .notice { font-size: 12px; color: #57606a; margin-top: 10px; }
+.reset-link { font-size: 12px; color: #57606a; text-decoration: underline; cursor: pointer; margin-top: 8px; display: inline-block; }
+
 footer { text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #e5e7eb; padding-top: 14px; margin-top: 8px; }
 </style>
 </head>
 <body>
 <div class="container">
   <h1>給与計算ツール</h1>
-  <p class="subtitle">残業時間を入力するだけで手取り予測が確認できます。設定は各自のブラウザに保存されます。</p>
+  <p class="subtitle">残業時間を入力するだけで手取り予測が確認できます。</p>
 
-  <!-- 計算 -->
-  <div class="card">
-    <h2>今月の残業時間</h2>
-    <div class="row">
-      <input type="number" id="overtime" placeholder="例: 28.30" min="0" step="0.01">
-      <span style="color:#57606a">時間</span>
-      <button class="btn" onclick="doCalc()">計算する</button>
+  <!-- ウィザード -->
+  <div id="wizard">
+    <div class="card">
+
+      <!-- ステップインジケーター -->
+      <div class="step-indicator">
+        <div class="dot" id="dot0"></div>
+        <div class="dot" id="dot1"></div>
+        <div class="dot" id="dot2"></div>
+        <div class="dot" id="dot3"></div>
+        <div class="dot" id="dot4"></div>
+        <div class="dot" id="dot5"></div>
+        <div class="dot" id="dot6"></div>
+        <span class="step-label" id="stepLabel"></span>
+      </div>
+
+      <!-- Step 0: ようこそ -->
+      <div class="step" id="step0">
+        <h2>ようこそ！初回設定をしましょう 👋</h2>
+        <p class="desc">あなたの給与情報を入力するだけで、毎月の手取りが簡単に計算できます。<br>設定はこのブラウザに保存され、次回からはすぐに使えます。</p>
+        <p class="desc">給与明細を手元に用意してから始めましょう。</p>
+        <div class="btn-row">
+          <button class="btn" onclick="goStep(1)">始める →</button>
+        </div>
+      </div>
+
+      <!-- Step 1: 基本給 -->
+      <div class="step" id="step1">
+        <h2>基本給はいくらですか？</h2>
+        <div class="hint">
+          <strong>📄 給与明細のどこを見ればいい？</strong>
+          「基本給」または「本給」と書かれた欄の金額を入力してください。
+        </div>
+        <div class="field">
+          <label>基本給</label>
+          <input type="number" id="w_base" placeholder="例: 456626">
+          <div class="unit">円</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-gray" onclick="goStep(0)">← 戻る</button>
+          <button class="btn" onclick="nextStep(1, 'w_base')">次へ →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: 時間外時給 -->
+      <div class="step" id="step2">
+        <h2>時間外手当の時給はいくらですか？</h2>
+        <div class="hint">
+          <strong>📄 計算方法</strong>
+          給与明細の「時間外手当」の金額 ÷ 残業時間数 で計算できます。<br>
+          例：105,842円 ÷ 28.3時間 ≒ 3,740円
+        </div>
+        <div class="field">
+          <label>時間外時給</label>
+          <input type="number" id="w_hourly" placeholder="例: 3740">
+          <div class="unit">円 / 時間</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-gray" onclick="goStep(1)">← 戻る</button>
+          <button class="btn" onclick="nextStep(2, 'w_hourly')">次へ →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: 社会保険料 -->
+      <div class="step" id="step3">
+        <h2>社会保険料を入力してください</h2>
+        <div class="hint">
+          <strong>📄 給与明細のどこを見ればいい？</strong>
+          控除欄に記載されている各金額を入力してください。
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label>健康保険料</label>
+          <input type="number" id="w_kenko" placeholder="例: 21200">
+          <div class="unit">円</div>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label>厚生年金保険料</label>
+          <input type="number" id="w_nenkin" placeholder="例: 48495">
+          <div class="unit">円</div>
+        </div>
+        <div class="field">
+          <label>子ども・子育て支援金</label>
+          <input type="number" id="w_kodomo" placeholder="例: 609">
+          <div class="unit">円</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-gray" onclick="goStep(2)">← 戻る</button>
+          <button class="btn" onclick="nextStep(3, 'w_kenko', 'w_nenkin', 'w_kodomo')">次へ →</button>
+        </div>
+      </div>
+
+      <!-- Step 4: 住民税・DC -->
+      <div class="step" id="step4">
+        <h2>税金・その他の控除を入力してください</h2>
+        <div class="hint">
+          <strong>📄 給与明細のどこを見ればいい？</strong>
+          控除欄の「住民税」と「DCマッチング拠出」の金額を入力してください。
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label>住民税</label>
+          <input type="number" id="w_jumin" placeholder="例: 31400">
+          <div class="unit">円</div>
+        </div>
+        <div class="field">
+          <label>DCマッチング拠出（ない場合は 0）</label>
+          <input type="number" id="w_dc" placeholder="例: 32000">
+          <div class="unit">円</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-gray" onclick="goStep(3)">← 戻る</button>
+          <button class="btn" onclick="nextStep(4, 'w_jumin', 'w_dc')">次へ →</button>
+        </div>
+      </div>
+
+      <!-- Step 5: 雇用保険 -->
+      <div class="step" id="step5">
+        <h2>雇用保険料率を入力してください</h2>
+        <div class="hint">
+          <strong>📄 計算方法</strong>
+          給与明細の「雇用保険料」÷「総支給額」× 100 で計算できます。<br>
+          例：2,814円 ÷ 562,755円 × 100 ≒ 0.5%<br>
+          わからない場合はそのまま「0.5」と入力してください。
+        </div>
+        <div class="field">
+          <label>雇用保険料率</label>
+          <input type="number" id="w_koyo" placeholder="例: 0.5" step="0.01">
+          <div class="unit">%</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-gray" onclick="goStep(4)">← 戻る</button>
+          <button class="btn" onclick="nextStep(5, 'w_koyo')">次へ →</button>
+        </div>
+      </div>
+
+      <!-- Step 6: 確認 -->
+      <div class="step" id="step6">
+        <h2>設定内容を確認してください ✅</h2>
+        <p class="desc">以下の内容で保存します。</p>
+        <table style="margin-bottom:4px">
+          <tr><td>基本給</td><td style="text-align:right" id="conf_base"></td></tr>
+          <tr><td>時間外時給</td><td style="text-align:right" id="conf_hourly"></td></tr>
+          <tr><td>健康保険料</td><td style="text-align:right" id="conf_kenko"></td></tr>
+          <tr><td>厚生年金保険料</td><td style="text-align:right" id="conf_nenkin"></td></tr>
+          <tr><td>子ども・子育て支援金</td><td style="text-align:right" id="conf_kodomo"></td></tr>
+          <tr><td>住民税</td><td style="text-align:right" id="conf_jumin"></td></tr>
+          <tr><td>DCマッチング拠出</td><td style="text-align:right" id="conf_dc"></td></tr>
+          <tr><td>雇用保険料率</td><td style="text-align:right" id="conf_koyo"></td></tr>
+        </table>
+        <div class="btn-row">
+          <button class="btn btn-gray" onclick="goStep(5)">← 戻る</button>
+          <button class="btn" onclick="saveAndStart()">保存して始める 🎉</button>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <!-- 結果 -->
-  <div class="card" id="result">
-    <h2>給与明細（予測）</h2>
-    <table id="tbl"></table>
-    <p class="notice">※ 所得税は源泉徴収税額表（甲欄・扶養0人）をもとに計算しています。実際の金額と多少異なる場合があります。</p>
-  </div>
-
-  <!-- 設定 -->
-  <div class="card">
-    <h2>設定（初回のみ入力してください）</h2>
-    <div class="grid">
-      <div class="field"><label>基本給（円）</label><input type="number" id="c_base"></div>
-      <div class="field"><label>時間外時給（円）</label><input type="number" id="c_hourly"></div>
-      <div class="field"><label>健康保険料（円）</label><input type="number" id="c_kenko"></div>
-      <div class="field"><label>厚生年金保険料（円）</label><input type="number" id="c_nenkin"></div>
-      <div class="field"><label>子ども・子育て支援金（円）</label><input type="number" id="c_kodomo"></div>
-      <div class="field"><label>住民税（円）</label><input type="number" id="c_jumin"></div>
-      <div class="field"><label>DCマッチング拠出（円）</label><input type="number" id="c_dc"></div>
-      <div class="field"><label>雇用保険料率（%）</label><input type="number" id="c_koyo" step="0.01"></div>
+  <!-- 計算画面 -->
+  <div id="calcScreen">
+    <div class="card">
+      <h2>今月の残業時間を入力</h2>
+      <div class="calc-input">
+        <input type="number" id="overtime" placeholder="例: 28.30" min="0" step="0.01">
+        <span style="color:#57606a">時間</span>
+        <button class="btn" onclick="doCalc()">計算する</button>
+      </div>
     </div>
-    <div class="actions">
-      <span id="savedMsg">✅ 保存しました</span>
-      <button class="btn btn-gray" onclick="resetCfg()">リセット</button>
-      <button class="btn" onclick="saveCfg()">保存する</button>
+
+    <div class="card" id="result">
+      <h2>給与明細（予測）</h2>
+      <table id="tbl"></table>
+      <p class="notice">※ 所得税は源泉徴収税額表（甲欄・扶養0人）をもとに計算しています。実際の金額と多少異なる場合があります。</p>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <span style="font-weight:600">設定</span>
+        <span class="reset-link" onclick="editSettings()">設定を変更する</span>
+      </div>
+      <table style="margin-top:10px" id="settingsSummary"></table>
     </div>
   </div>
 
@@ -119,12 +315,8 @@ footer { text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid
 </div>
 
 <script>
-var KEY = "kyuyo_cfg_v1";
-
-var DEFAULTS = {
-  base:"", hourly:"", kenko:"", nenkin:"",
-  kodomo:"", jumin:"", dc:"", koyo:""
-};
+var KEY = "kyuyo_cfg_v2";
+var tmpCfg = {};
 
 var TAX = [
   [0,88000,0],[88000,89000,130],[89000,90000,180],[90000,91000,230],[91000,92000,290],
@@ -179,70 +371,85 @@ function calcTax(t) {
 
 function yen(n) { return n.toLocaleString() + " 円"; }
 
-function loadCfg() {
-  try {
-    var s = localStorage.getItem(KEY);
-    if (s) {
-      var o = JSON.parse(s);
-      var c = {};
-      for (var k in DEFAULTS) c[k] = (o[k] !== undefined) ? o[k] : DEFAULTS[k];
-      return c;
+function goStep(n) {
+  for (var i = 0; i <= 6; i++) {
+    var s = document.getElementById("step" + i);
+    var d = document.getElementById("dot" + i);
+    s.className = "step" + (i === n ? " active" : "");
+    d.className = "dot" + (i < n ? " done" : (i === n ? " current" : ""));
+  }
+  document.getElementById("stepLabel").innerHTML = (n + 1) + " / 7";
+}
+
+function nextStep(currentStep) {
+  var ids = Array.prototype.slice.call(arguments, 1);
+  for (var i = 0; i < ids.length; i++) {
+    var val = document.getElementById(ids[i]).value;
+    if (val === "" || val === null) {
+      alert("入力してください");
+      document.getElementById(ids[i]).focus();
+      return;
     }
-  } catch(e) {}
-  var c = {};
-  for (var k in DEFAULTS) c[k] = DEFAULTS[k];
-  return c;
+    tmpCfg[ids[i].replace("w_", "")] = parseFloat(val);
+  }
+  if (currentStep === 5) {
+    // 確認画面を更新
+    document.getElementById("conf_base").innerHTML   = yen(tmpCfg.base);
+    document.getElementById("conf_hourly").innerHTML = yen(tmpCfg.hourly) + " / 時間";
+    document.getElementById("conf_kenko").innerHTML  = yen(tmpCfg.kenko);
+    document.getElementById("conf_nenkin").innerHTML = yen(tmpCfg.nenkin);
+    document.getElementById("conf_kodomo").innerHTML = yen(tmpCfg.kodomo);
+    document.getElementById("conf_jumin").innerHTML  = yen(tmpCfg.jumin);
+    document.getElementById("conf_dc").innerHTML     = yen(tmpCfg.dc);
+    document.getElementById("conf_koyo").innerHTML   = tmpCfg.koyo + " %";
+  }
+  goStep(currentStep + 1);
 }
 
-function fillForm(c) {
-  document.getElementById("c_base").value   = c.base;
-  document.getElementById("c_hourly").value = c.hourly;
-  document.getElementById("c_kenko").value  = c.kenko;
-  document.getElementById("c_nenkin").value = c.nenkin;
-  document.getElementById("c_kodomo").value = c.kodomo;
-  document.getElementById("c_jumin").value  = c.jumin;
-  document.getElementById("c_dc").value     = c.dc;
-  document.getElementById("c_koyo").value   = c.koyo;
+function saveAndStart() {
+  localStorage.setItem(KEY, JSON.stringify(tmpCfg));
+  showCalcScreen(tmpCfg);
 }
 
-function readForm() {
-  return {
-    base:   parseFloat(document.getElementById("c_base").value)   || DEFAULTS.base,
-    hourly: parseFloat(document.getElementById("c_hourly").value) || DEFAULTS.hourly,
-    kenko:  parseFloat(document.getElementById("c_kenko").value)  || DEFAULTS.kenko,
-    nenkin: parseFloat(document.getElementById("c_nenkin").value) || DEFAULTS.nenkin,
-    kodomo: parseFloat(document.getElementById("c_kodomo").value) || DEFAULTS.kodomo,
-    jumin:  parseFloat(document.getElementById("c_jumin").value)  || DEFAULTS.jumin,
-    dc:     parseFloat(document.getElementById("c_dc").value)     || DEFAULTS.dc,
-    koyo:   parseFloat(document.getElementById("c_koyo").value)   || DEFAULTS.koyo
-  };
+function showCalcScreen(cfg) {
+  document.getElementById("wizard").style.display = "none";
+  document.getElementById("calcScreen").style.display = "block";
+
+  var s = document.getElementById("settingsSummary");
+  s.innerHTML =
+    "<tr><td>基本給</td><td style='text-align:right'>" + yen(cfg.base) + "</td></tr>" +
+    "<tr><td>時間外時給</td><td style='text-align:right'>" + yen(cfg.hourly) + "</td></tr>" +
+    "<tr><td>健康保険料</td><td style='text-align:right'>" + yen(cfg.kenko) + "</td></tr>" +
+    "<tr><td>厚生年金保険料</td><td style='text-align:right'>" + yen(cfg.nenkin) + "</td></tr>" +
+    "<tr><td>住民税</td><td style='text-align:right'>" + yen(cfg.jumin) + "</td></tr>" +
+    "<tr><td>DCマッチング拠出</td><td style='text-align:right'>" + yen(cfg.dc) + "</td></tr>";
 }
 
-function saveCfg() {
-  var c = readForm();
-  localStorage.setItem(KEY, JSON.stringify(c));
-  var m = document.getElementById("savedMsg");
-  m.style.display = "inline";
-  setTimeout(function(){ m.style.display = "none"; }, 2500);
-}
-
-function resetCfg() {
-  if (confirm("設定をリセットしますか？")) fillForm(DEFAULTS);
+function editSettings() {
+  localStorage.removeItem(KEY);
+  tmpCfg = {};
+  document.getElementById("calcScreen").style.display = "none";
+  document.getElementById("result").style.display = "none";
+  document.getElementById("wizard").style.display = "block";
+  goStep(0);
 }
 
 function doCalc() {
   var h = parseFloat(document.getElementById("overtime").value);
   if (isNaN(h) || h < 0) { alert("残業時間を入力してください"); return; }
-  var c = readForm();
 
-  var ot    = Math.floor(h * c.hourly);
-  var gross = c.base + ot;
-  var koyo  = Math.floor(gross * c.koyo / 100);
+  var raw = localStorage.getItem(KEY);
+  if (!raw) { alert("設定が見つかりません"); return; }
+  var c = JSON.parse(raw);
+
+  var ot     = Math.floor(h * c.hourly);
+  var gross  = c.base + ot;
+  var koyo   = Math.floor(gross * c.koyo / 100);
   var shakai = c.kenko + c.nenkin + koyo + c.kodomo;
   var taxable = gross - shakai;
-  var tax = calcTax(taxable);
+  var tax    = calcTax(taxable);
   var deduct = shakai + tax + c.jumin + c.dc;
-  var net = gross - deduct;
+  var net    = gross - deduct;
 
   var r = "";
   r += "<tr class='sec'><td colspan='2'>支給</td></tr>";
@@ -265,7 +472,18 @@ function doCalc() {
   document.getElementById("result").scrollIntoView({behavior:"smooth"});
 }
 
-fillForm(loadCfg());
+// 初期化：設定済みならすぐ計算画面へ
+var saved = localStorage.getItem(KEY);
+if (saved) {
+  try {
+    var cfg = JSON.parse(saved);
+    showCalcScreen(cfg);
+  } catch(e) {
+    goStep(0);
+  }
+} else {
+  goStep(0);
+}
 </script>
 </body>
 </html>
