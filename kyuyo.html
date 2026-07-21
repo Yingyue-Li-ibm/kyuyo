@@ -172,22 +172,27 @@ footer { text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid
         </div>
       </div>
 
-      <!-- Step 2: 時間外時給 -->
+      <!-- Step 2: 時間外手当（直接入力） -->
       <div class="step" id="step2">
-        <h2>時間外手当の時給はいくらですか？</h2>
+        <h2>先月の時間外手当を入力してください</h2>
         <div class="hint">
-          <strong>📄 計算方法</strong>
-          給与明細の「時間外手当」の金額 ÷ 残業時間数 で計算できます。<br>
-          例：105,842円 ÷ 28.3時間 ≒ 3,740円
+          <strong>📄 給与明細のどこを見ればいい？</strong>
+          「時間外手当」または「時間外手当合計」と書かれた欄の金額を入力してください。<br>
+          また、その月の残業時間数も入力してください。時給は自動計算します。
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label>時間外手当の金額</label>
+          <input type="number" id="w_ot_amount" placeholder="例: 105842">
+          <div class="unit">円</div>
         </div>
         <div class="field">
-          <label>時間外時給</label>
-          <input type="number" id="w_hourly" placeholder="例: 3740">
-          <div class="unit">円 / 時間</div>
+          <label>その月の残業時間数</label>
+          <input type="number" id="w_ot_hours" placeholder="例: 28.3" step="0.01">
+          <div class="unit">時間</div>
         </div>
         <div class="btn-row">
           <button class="btn btn-gray" onclick="goStep(1)">← 戻る</button>
-          <button class="btn" onclick="nextStep(2, 'w_hourly')">次へ →</button>
+          <button class="btn" onclick="calcHourly()">次へ →</button>
         </div>
       </div>
 
@@ -268,7 +273,7 @@ footer { text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid
         <p class="desc">以下の内容で保存します。</p>
         <table style="margin-bottom:4px">
           <tr><td>基本給</td><td style="text-align:right" id="conf_base"></td></tr>
-          <tr><td>時間外時給</td><td style="text-align:right" id="conf_hourly"></td></tr>
+          <tr><td>時間外時給（自動計算）</td><td style="text-align:right" id="conf_hourly"></td></tr>
           <tr><td>健康保険料</td><td style="text-align:right" id="conf_kenko"></td></tr>
           <tr><td>厚生年金保険料</td><td style="text-align:right" id="conf_nenkin"></td></tr>
           <tr><td>子ども・子育て支援金</td><td style="text-align:right" id="conf_kodomo"></td></tr>
@@ -379,6 +384,15 @@ function goStep(n) {
     d.className = "dot" + (i < n ? " done" : (i === n ? " current" : ""));
   }
   document.getElementById("stepLabel").innerHTML = (n + 1) + " / 7";
+}
+
+function calcHourly() {
+  var amount = parseFloat(document.getElementById("w_ot_amount").value);
+  var hours  = parseFloat(document.getElementById("w_ot_hours").value);
+  if (isNaN(amount) || amount <= 0) { alert("時間外手当の金額を入力してください"); return; }
+  if (isNaN(hours)  || hours  <= 0) { alert("残業時間数を入力してください"); return; }
+  tmpCfg.hourly = Math.floor(amount / hours);
+  goStep(3);
 }
 
 function nextStep(currentStep) {
